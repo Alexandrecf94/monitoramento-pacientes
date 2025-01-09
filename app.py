@@ -36,8 +36,12 @@ def get_data(sheet_name):
     # Criar DataFrame
     df = pd.DataFrame(data, columns=headers)
 
-    # Converter colunas numéricas
-    for col in ["Hemoglobina", "Hematócrito", "Leucócitos", "Plaquetas", "Glicemia", "Ureia"]:
+    # Remover a coluna "Status" se existir
+    if "Status" in df.columns:
+        df.drop(columns=["Status"], inplace=True)
+
+    # Converter colunas numéricas automaticamente
+    for col in df.columns[1:]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
     df["DATA"] = pd.to_datetime(df["DATA"], format="%d-%b-%Y", errors="coerce")
@@ -55,13 +59,9 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
     plt.xticks(rotation=45)
 
     # Adicionar marcos temporais
-    for linha in marcos_temporais.split("\n"):
-        try:
-            data, evento = linha.split(":")
-            data = pd.to_datetime(data.strip())
-            plt.axvline(data, linestyle="--", color="red", alpha=0.7, label=evento.strip())
-        except ValueError:
-            pass
+    for linha in marcos_temporais:
+        data, evento = linha
+        plt.axvline(data, linestyle="--", color="red", alpha=0.7, label=evento)
 
     plt.legend()
     plt.grid()
@@ -88,14 +88,22 @@ with tabs[0]:
 
         if not df.empty:
             st.sidebar.header("Configuração do Gráfico")
-            exame_selecionado = st.sidebar.selectbox("Selecione o exame:", ["Hemoglobina", "Hematócrito", "Leucócitos", "Plaquetas", "Glicemia", "Ureia"])
+            exames_disponiveis = [col for col in df.columns if col != "DATA"]
+            exame_selecionado = st.sidebar.selectbox("Selecione o exame:", exames_disponiveis)
 
             # Selecionar intervalo de tempo
             data_inicial = st.sidebar.date_input("Data inicial:", min_value=df["DATA"].min(), max_value=df["DATA"].max(), value=df["DATA"].min())
             data_final = st.sidebar.date_input("Data final:", min_value=df["DATA"].min(), max_value=df["DATA"].max(), value=df["DATA"].max())
 
             # Adicionar marcos temporais
-            marcos_temporais = st.sidebar.text_area("Marcos Temporais (ex.: 2024-01-01:Evento)")
+            st.sidebar.subheader("Marcos Temporais")
+            marcos_temporais = []
+            with st.sidebar.expander("Adicionar Marcos Temporais"):
+                nova_data = st.date_input("Data do Marco:")
+                novo_evento = st.text_input("Descrição do Evento:")
+                if st.button("Adicionar Marco"):
+                    if nova_data and novo_evento:
+                        marcos_temporais.append((pd.to_datetime(nova_data), novo_evento))
 
             # Gerar gráfico
             graph = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais)
