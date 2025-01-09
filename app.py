@@ -95,6 +95,7 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
     # Adicionar valores sobre os pontos
     if exibir_valores:    
         for x, y in zip(df_filtrado["DATA"], df_filtrado[exame_selecionado]):
+            valor_formatado = f"{y:.2f}".rstrip('0').rstrip('.')  # Remove zeros desnecessários e ponto final
             plt.text(x, y + 0.1, f"{y:.2f}", fontsize=9, ha="center", va="bottom", color="blue")
 
     # Adicionar marcos temporais
