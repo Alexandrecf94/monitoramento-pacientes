@@ -1,4 +1,4 @@
- Função para autenticação básica
+# Função para autenticação básica
 def autenticar():
     # Credenciais fixas (login e senha para teste)
     login_esperado = "admin"
