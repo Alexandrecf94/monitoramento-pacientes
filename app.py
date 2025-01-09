@@ -16,15 +16,18 @@ def autenticar():
             # Validar as credenciais fixas
             if login == "admin" and senha == "1234":
                 st.session_state["autenticado"] = True
-                st.experimental_rerun()  # Recarregar para limpar a tela de login
             else:
                 st.error("Usuário ou senha incorretos.")
-        st.stop()  # Para o aplicativo até que a autenticação seja bem-sucedida
+        # Interromper o restante do aplicativo enquanto não autenticado
+        if not st.session_state["autenticado"]:
+            return False
+    return True
 
-# Garantir que a função de autenticação seja chamada antes de tudo
-autenticar()
+# Chamar a função de autenticação
+if not autenticar():
+    st.stop()  # Impedir execução do restante do código até autenticar
 
-# Código principal do aplicativo
+# Código principal do aplicativo (exemplo)
 st.title("Bem-vindo ao Monitoramento de Pacientes")
 st.write("Você está autenticado!")
 
