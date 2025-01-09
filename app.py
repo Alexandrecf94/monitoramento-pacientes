@@ -3,6 +3,7 @@ from google.oauth2.service_account import Credentials
 import gspread
 import pandas as pd
 import matplotlib.pyplot as plt
+from PIL import Image
 import os
 import json
 from io import BytesIO
@@ -70,11 +71,12 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
     plt.legend()
     plt.grid()
 
-    # Salvar gráfico em memória
+    # Salvar gráfico em memória como imagem
     buf = BytesIO()
     plt.savefig(buf, format="png")
     buf.seek(0)
-    return buf
+    plt.close()
+    return Image.open(buf)
 
 # Configuração do Streamlit
 st.title("Monitoramento de Pacientes")
