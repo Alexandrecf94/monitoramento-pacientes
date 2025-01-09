@@ -96,7 +96,7 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
     if exibir_valores:    
         for x, y in zip(df_filtrado["DATA"], df_filtrado[exame_selecionado]):
             valor_formatado = f"{y:.2f}".rstrip('0').rstrip('.') if y % 1 != 0 else f"{int(y)}" # Formatar o valor, removendo '.00' se for inteiro 
-            plt.text(x, y + 0.1, f"{y:.2f}", fontsize=9, ha="center", va="bottom", color="blue")
+            plt.text(x, y + 0.1, valor_formatado, fontsize=9, ha="center", va="bottom", color="blue")
 
     # Adicionar marcos temporais
     for data, evento in marcos_temporais:
