@@ -57,7 +57,7 @@ try:
         )
 
         # Controle para selecionar intervalo de tempo
-        datas = pd.to_datetime(df["DATA"], format="%d/%m/%Y")
+        datas = pd.to_datetime(df["DATA"], format="%d-%b-%Y", errors="coerce")
         data_inicial = st.sidebar.date_input("Data inicial:", min_value=datas.min(), max_value=datas.max())
         data_final = st.sidebar.date_input("Data final:", min_value=datas.min(), max_value=datas.max())
 
