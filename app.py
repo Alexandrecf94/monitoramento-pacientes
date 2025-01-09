@@ -35,6 +35,10 @@ def get_data(sheet_name):
     # Criar DataFrame
     df = pd.DataFrame(data, columns=headers)
 
+    # Remover a coluna "Status" se existir
+    if "Status" in df.columns:
+        df.drop(columns=["Status"], inplace=True)
+
     # Converter colunas numéricas para tipo correto
     for col in ["Hemoglobina", "Hematócrito", "Leucócitos", "Plaquetas", "Glicemia", "Ureia"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
@@ -45,7 +49,8 @@ def get_data(sheet_name):
     return df
 
 # Função para gerar gráficos
-def plot_graph(df, exame_selecionado, data_inicial, data_final, marcos):
+@st.cache_data(ttl=600)  # Cache para salvar gráficos gerados
+def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos):
     # Filtrar os dados pelo intervalo de tempo
     df_filtrado = df[(df["DATA"] >= pd.to_datetime(data_inicial)) & (df["DATA"] <= pd.to_datetime(data_final))]
 
@@ -68,40 +73,52 @@ def plot_graph(df, exame_selecionado, data_inicial, data_final, marcos):
 # Configuração do Streamlit
 st.title("Monitoramento de Pacientes")
 
-# Carregar dados
-try:
-    df = get_data(sheet_name)
+# Tabs para alternar entre as funcionalidades
+tab1, tab2 = st.tabs(["Visualizar Dados", "Gráficos Gerados"])
 
-    if not df.empty:
-        # Controle para selecionar exame
-        st.sidebar.header("Configuração do Gráfico")
-        exame_selecionado = st.sidebar.selectbox(
-            "Selecione o exame:", 
-            df.columns[1:]  # Exibe todas as colunas (exceto "DATA")
-        )
+# Aba "Visualizar Dados"
+with tab1:
+    try:
+        df = get_data(sheet_name)
 
-        # Controle para selecionar intervalo de tempo
-        data_inicial = st.sidebar.date_input("Data inicial:", value=df["DATA"].min(), min_value=df["DATA"].min(), max_value=df["DATA"].max())
-        data_final = st.sidebar.date_input("Data final:", value=df["DATA"].max(), min_value=df["DATA"].min(), max_value=df["DATA"].max())
+        if not df.empty:
+            # Controle para selecionar exame
+            st.sidebar.header("Configuração do Gráfico")
+            exame_selecionado = st.sidebar.selectbox(
+                "Selecione o exame:", 
+                df.columns[1:]  # Exibe todas as colunas (exceto "DATA")
+            )
 
-        # Controle para marcos temporais
-        st.sidebar.subheader("Marcos Temporais")
-        marcos_temporais = []
-        with st.sidebar.expander("Adicionar Marcos Temporais"):
-            if st.button("Adicionar"):
+            # Controle para selecionar intervalo de tempo
+            data_inicial = st.sidebar.date_input("Data inicial:", value=df["DATA"].min(), min_value=df["DATA"].min(), max_value=df["DATA"].max())
+            data_final = st.sidebar.date_input("Data final:", value=df["DATA"].max(), min_value=df["DATA"].min(), max_value=df["DATA"].max())
+
+            # Controle para marcos temporais
+            st.sidebar.subheader("Marcos Temporais")
+            marcos_temporais = []
+            with st.sidebar.expander("Adicionar Marcos Temporais"):
                 nova_data = st.date_input("Data do Marco:")
                 novo_evento = st.text_input("Descrição do Evento:")
-                if nova_data and novo_evento:
-                    marcos_temporais.append({"data": nova_data, "evento": novo_evento})
+                if st.button("Adicionar"):
+                    if nova_data and novo_evento:
+                        marcos_temporais.append({"data": nova_data, "evento": novo_evento})
 
-        # Gerar gráfico
-        plt = plot_graph(df, exame_selecionado, data_inicial, data_final, marcos_temporais)
-        st.pyplot(plt)
+            # Gerar gráfico e exibir
+            plt = generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_temporais)
+            st.pyplot(plt)
+        else:
+            st.error("Nenhum dado válido foi carregado. Verifique a planilha.")
+    except Exception as e:
+        st.error(f"Erro ao carregar os dados: {e}")
 
-    else:
-        st.error("Nenhum dado válido foi carregado. Verifique a planilha.")
-except Exception as e:
-    st.error(f"Erro ao carregar os dados: {e}")
+# Aba "Gráficos Gerados"
+with tab2:
+    st.subheader("Gráficos Recentemente Gerados")
+    try:
+        st.pyplot(plt)  # Exibe o último gráfico gerado
+    except NameError:
+        st.write("Nenhum gráfico gerado ainda.")
+
 
 
 
