@@ -27,14 +27,10 @@ def autenticar():
         if st.button("Entrar"):
             if login == login_esperado and senha == senha_esperada:
                 st.session_state["autenticado"] = True
-                st.success("Autenticado com sucesso!")
+                st.experimental_rerun()  # Reinicia a execução para carregar a interface principal
             else:
                 st.error("Usuário ou senha incorretos.")
         st.stop()  # Para a execução até autenticar
-
-# Chamar a função de autenticação
-autenticar()
-
 
 # Configuração do Google Sheets
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
