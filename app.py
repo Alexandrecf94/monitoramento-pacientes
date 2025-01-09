@@ -52,12 +52,13 @@ def get_data(sheet_name):
 def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_temporais, faixas_temporais):
     df_filtrado = df[(df["DATA"] >= data_inicial) & (df["DATA"] <= data_final)]
 
-    plt.figure(figsize=(12, 6))  # Ajuste do tamanho do gráfico
+    plt.figure(figsize=(12, 8))  # Maior tamanho para parecer mais "científico"
     plt.plot(df_filtrado["DATA"], df_filtrado[exame_selecionado], marker="o", label=f"{exame_selecionado} (valor)")
     plt.xlabel("Data")
     plt.ylabel(exame_selecionado)
-    plt.title(f"{exame_selecionado} ao longo do tempo")
+    plt.title(f"{exame_selecionado} ao longo do tempo", fontsize=16)
     plt.xticks(rotation=45, ha="right")  # Rotação e alinhamento do texto no eixo X
+    plt.grid(alpha=0.5)
 
     # Adicionar marcos temporais
     for data, evento in marcos_temporais:
@@ -140,7 +141,7 @@ with tabs[0]:
 
             # Gerar gráfico
             graph = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais, faixas_temporais)
-            st.image(graph, caption=f"{exame_selecionado} ao longo do tempo", use_column_width=True)
+            st.pyplot(plt.imread(graph), clear_figure=True)
 
             # Botão para baixar gráfico
             st.download_button(
