@@ -16,14 +16,13 @@ def autenticar():
         if st.button("Entrar"):
             if login == login_esperado and senha == senha_esperada:
                 st.session_state["autenticado"] = True
-                st.experimental_set_query_params(auth="true")  # Define um parâmetro para indicar autenticação
+                st.experimental_rerun()  # Reinicia a execução para carregar a interface principal
             else:
                 st.error("Usuário ou senha incorretos.")
         st.stop()  # Para a execução até autenticar
 
-# Verificar se o parâmetro de autenticação está definido
-if st.experimental_get_query_params().get("auth") != ["true"]:
-    autenticar()
+# Chamar a função de autenticação
+autenticar()
 
 import streamlit as st
 from google.oauth2.service_account import Credentials
