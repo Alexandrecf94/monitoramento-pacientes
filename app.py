@@ -23,10 +23,7 @@ client = gspread.authorize(creds)
 # ID da planilha
 spreadsheet_id = "12m2kUbhJnjjUPqyoJiu0YOxvw7x5jtfdtZuMbfEQLfo"
 
-# Nome da aba na planilha
-sheet_name = "Laboratório"
-
-# Função para carregar os dados da planilha
+# Função para carregar os dados de uma aba específica
 def get_data(sheet_name):
     sheet = client.open_by_key(spreadsheet_id).worksheet(sheet_name)
     all_values = sheet.get_all_values()
@@ -66,7 +63,6 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
           for x, y in zip(df_filtrado["DATA"], df_filtrado[exame_selecionado]):
               plt.text(x, y + 0.1, f"{y:.2f}", fontsize=9, ha="center", va="bottom", color="blue")
 
-
     # Adicionar marcos temporais
     for data, evento in marcos_temporais:
         plt.axvline(data, linestyle="--", color="red", alpha=0.7, label=evento)
@@ -89,12 +85,12 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
 st.title("Monitoramento de Pacientes")
 
 # Aba de navegação
-tabs = st.tabs(["Visualizar Dados", "Relatórios Automáticos", "Ajustar Gráficos com IA", "Discussão Clínica Simulada"])
+tabs = st.tabs(["Laboratório", "Clínica", "Conduta", "Relatórios Automáticos", "Ajustar Gráficos com IA", "Discussão Clínica Simulada"])
 
-# Aba: Visualizar Dados
+# Aba: Laboratório
 with tabs[0]:
     try:
-        df = get_data(sheet_name)
+        df = get_data("Laboratório")
 
         if not df.empty:
             st.sidebar.header("Configuração do Gráfico")
@@ -160,13 +156,31 @@ with tabs[0]:
     except Exception as e:
         st.error(f"Erro ao carregar os dados: {e}")
 
-# Aba: Relatórios Automáticos
+# Aba: Clínica
 with tabs[1]:
+    try:
+        df_clinica = get_data("Evolução Clínica")
+        st.header("Evolução Clínica")
+        st.write(df_clinica)
+    except Exception as e:
+        st.error(f"Erro ao carregar os dados da clínica: {e}")
+
+# Aba: Conduta
+with tabs[2]:
+    try:
+        df_conduta = get_data("Conduta")
+        st.header("Conduta")
+        st.write(df_conduta)
+    except Exception as e:
+        st.error(f"Erro ao carregar os dados da conduta: {e}")
+
+# Aba: Relatórios Automáticos
+with tabs[3]:
     st.header("Relatórios Automáticos")
     st.write("Em desenvolvimento...")
 
 # Aba: Ajustar Gráficos com IA
-with tabs[2]:
+with tabs[4]:
     st.header("Ajustar Gráficos com IA")
     st.write("Digite comandos para ajustar os gráficos automaticamente usando IA.")
 
@@ -177,7 +191,7 @@ with tabs[2]:
         st.info("Integração com IA em desenvolvimento...")
 
 # Aba: Discussão Clínica Simulada
-with tabs[3]:
+with tabs[5]:
     st.header("Discussão Clínica Simulada")
     st.write("Digite sua pergunta para obter uma análise clínica baseada nos dados do paciente.")
 
