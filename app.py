@@ -32,6 +32,9 @@ def autenticar():
                 st.error("Usuário ou senha incorretos.")
         st.stop()  # Para a execução até autenticar
 
+# Chamar a função de autenticação
+autenticar()
+
 # Configuração do Google Sheets
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
           "https://www.googleapis.com/auth/drive"]
