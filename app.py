@@ -116,5 +116,6 @@ with tabs[1]:
     if graph_cache:
         for i, cached_graph in enumerate(graph_cache):
             st.pyplot(cached_graph)
+            st.markdown(f"Gráfico {i+1}")
     else:
         st.write("Nenhum gráfico salvo ainda.")
