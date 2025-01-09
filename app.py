@@ -3,11 +3,10 @@ from google.oauth2.service_account import Credentials
 import gspread
 import pandas as pd
 import matplotlib.pyplot as plt
-from PIL import Image
 import os
 import json
-from io import BytesIO
 from datetime import datetime
+from io import BytesIO
 
 # Configuração do Google Sheets
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
@@ -53,12 +52,12 @@ def get_data(sheet_name):
 def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_temporais, faixas_temporais):
     df_filtrado = df[(df["DATA"] >= data_inicial) & (df["DATA"] <= data_final)]
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(12, 6))  # Ajuste do tamanho do gráfico
     plt.plot(df_filtrado["DATA"], df_filtrado[exame_selecionado], marker="o", label=f"{exame_selecionado} (valor)")
     plt.xlabel("Data")
     plt.ylabel(exame_selecionado)
     plt.title(f"{exame_selecionado} ao longo do tempo")
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=45, ha="right")  # Rotação e alinhamento do texto no eixo X
 
     # Adicionar marcos temporais
     for data, evento in marcos_temporais:
@@ -69,11 +68,11 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
         plt.axvspan(inicio, fim, color="yellow", alpha=0.3, label=descricao)
 
     plt.legend()
-    plt.grid()
+    plt.tight_layout()  # Ajustar margens automaticamente para evitar cortes
 
     # Salvar gráfico em memória como imagem
     buf = BytesIO()
-    plt.savefig(buf, format="png")
+    plt.savefig(buf, format="png", bbox_inches="tight")  # Garantir que o gráfico completo seja salvo
     buf.seek(0)
     plt.close()
     return buf
@@ -82,7 +81,7 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
 st.title("Monitoramento de Pacientes")
 
 # Aba de navegação
-tabs = st.tabs(["Visualizar Dados", "Relatórios Automáticos"])
+tabs = st.tabs(["Visualizar Dados"])
 
 # Aba: Visualizar Dados
 with tabs[0]:
@@ -140,17 +139,17 @@ with tabs[0]:
             faixas_temporais = st.session_state["faixas"]
 
             # Gerar gráfico
-            graph_buf = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais, faixas_temporais)
-            st.image(graph_buf, caption=f"{exame_selecionado} ao longo do tempo")
+            graph = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais, faixas_temporais)
+            st.image(graph, caption=f"{exame_selecionado} ao longo do tempo", use_column_width=True)
 
             # Botão para baixar gráfico
-            st.download_button("Baixar Gráfico", data=graph_buf, file_name=f"{exame_selecionado}_grafico.png", mime="image/png")
+            st.download_button(
+                label="Baixar Gráfico",
+                data=graph,
+                file_name=f"{exame_selecionado}_grafico.png",
+                mime="image/png"
+            )
         else:
             st.error("Nenhum dado válido foi carregado. Verifique a planilha.")
     except Exception as e:
         st.error(f"Erro ao carregar os dados: {e}")
-
-# Aba: Relatórios Automáticos
-with tabs[1]:
-    st.header("Relatórios Automáticos")
-    st.write("Em desenvolvimento...")
