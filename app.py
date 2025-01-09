@@ -9,6 +9,33 @@ import json
 from io import BytesIO
 from datetime import datetime
 
+# Função para autenticação básica
+def autenticar():
+    # Credenciais fixas (login e senha para teste)
+    login_esperado = "admin"
+    senha_esperada = "1234"
+
+    # Criar uma sessão para autenticação
+    if "autenticado" not in st.session_state:
+        st.session_state["autenticado"] = False
+
+    # Exibir tela de login se não autenticado
+    if not st.session_state["autenticado"]:
+        st.title("Login")
+        login = st.text_input("Usuário")
+        senha = st.text_input("Senha", type="password")
+        if st.button("Entrar"):
+            if login == login_esperado and senha == senha_esperada:
+                st.session_state["autenticado"] = True
+                st.success("Autenticado com sucesso!")
+            else:
+                st.error("Usuário ou senha incorretos.")
+        st.stop()  # Para a execução até autenticar
+
+# Chamar a função de autenticação
+autenticar()
+
+
 # Configuração do Google Sheets
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
           "https://www.googleapis.com/auth/drive"]
