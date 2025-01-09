@@ -169,40 +169,4 @@ if secao_selecionada == "Laboratório":
 
     # Aba: Ajustar Gráficos com IA
     with tabs[2]:
-        st.header("Ajustar Gráficos com IA")
-        st.write("Digite comandos para ajustar os gráficos automaticamente usando IA.")
-
-        comando = st.text_input("Digite o comando:", placeholder="Exemplo: Adicione uma linha de tendência ao gráfico.")
-        if st.button("Executar Comando"):
-            # Simulação de processamento de comando
-            st.success(f"Comando recebido: {comando}")
-            st.info("Integração com IA em desenvolvimento...")
-
-# Seção: Clínica
-elif secao_selecionada == "Clínica":
-    st.header("Seção: Clínica")
-    try:
-        df_clinica = get_data("Evolução Clínica")
-        st.write(df_clinica)
-    except Exception as e:
-        st.error(f"Erro ao carregar os dados da clínica: {e}")
-
-# Seção: Conduta
-elif secao_selecionada == "Conduta":
-    st.header("Seção: Conduta")
-    try:
-        df_conduta = get_data("Conduta")
-        st.write(df_conduta)
-    except Exception as e:
-        st.error(f"Erro ao carregar os dados da conduta: {e}")
-
-# Seção: Discussão Clínica Simulada
-elif secao_selecionada == "Discussão Clínica Simulada":
-    st.header("Discussão Clínica Simulada")
-    st.write("Digite sua pergunta para obter uma análise clínica baseada nos dados do paciente.")
-
-    pergunta = st.text_input("Pergunta:", placeholder="Exemplo: Quais exames adicionais devo solicitar?")
-    if st.button("Consultar Especialista"):
-        # Simulação de resposta da IA
-        st.success("Baseado nos dados, sugere-se hemograma completo e perfil renal.")
-        st.info("Integração com IA em desenvolvimento...")
+       
