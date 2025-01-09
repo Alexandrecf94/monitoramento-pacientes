@@ -1,29 +1,32 @@
 import streamlit as st
+
 # Função para autenticação básica
 def autenticar():
-    # Credenciais fixas (login e senha para teste)
-    login_esperado = "admin"
-    senha_esperada = "1234"
-
-    # Criar uma sessão para autenticação
+    # Inicializar o estado de autenticação se ainda não existir
     if "autenticado" not in st.session_state:
-        st.session_state["autenticado"] = False
+        st.session_state["autenticado"] = False  # Usuário começa como não autenticado
 
-    # Exibir tela de login se não autenticado
+    # Verificar se o usuário está autenticado
     if not st.session_state["autenticado"]:
         st.title("Login")
-        login = st.text_input("Usuário")
-        senha = st.text_input("Senha", type="password")
+        login = st.text_input("Usuário", key="login")
+        senha = st.text_input("Senha", type="password", key="senha")
         if st.button("Entrar"):
-            if login == login_esperado and senha == senha_esperada:
+            # Validar as credenciais fixas
+            if login == "admin" and senha == "1234":
                 st.session_state["autenticado"] = True
-                st.experimental_rerun()  # Reinicia a execução para carregar a interface principal
+                st.experimental_rerun()  # Reiniciar a aplicação para carregar a interface principal
             else:
                 st.error("Usuário ou senha incorretos.")
-        st.stop()  # Para a execução até autenticar
+        st.stop()  # Parar a execução do restante da aplicação
 
-# Chamar a função de autenticação
+# Garantir que a função de autenticação seja chamada antes de tudo
 autenticar()
+
+# Após autenticação, o restante do aplicativo é carregado normalmente
+st.title("Monitoramento de Pacientes")
+st.write("Bem-vindo ao sistema!")
+
 
 import streamlit as st
 from google.oauth2.service_account import Credentials
