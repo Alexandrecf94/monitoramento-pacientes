@@ -89,7 +89,7 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
 st.title("Monitoramento de Pacientes")
 
 # Aba de navegação
-tabs = st.tabs(["Visualizar Dados", "Relatórios Automáticos"])
+tabs = st.tabs(["Visualizar Dados", "Relatórios Automáticos", "Ajustar Gráficos com IA", "Discussão Clínica Simulada"])
 
 # Aba: Visualizar Dados
 with tabs[0]:
@@ -164,3 +164,25 @@ with tabs[0]:
 with tabs[1]:
     st.header("Relatórios Automáticos")
     st.write("Em desenvolvimento...")
+
+# Aba: Ajustar Gráficos com IA
+with tabs[2]:
+    st.header("Ajustar Gráficos com IA")
+    st.write("Digite comandos para ajustar os gráficos automaticamente usando IA.")
+
+    comando = st.text_input("Digite o comando:", placeholder="Exemplo: Adicione uma linha de tendência ao gráfico.")
+    if st.button("Executar Comando"):
+        # Simulação de processamento de comando
+        st.success(f"Comando recebido: {comando}")
+        st.info("Integração com IA em desenvolvimento...")
+
+# Aba: Discussão Clínica Simulada
+with tabs[3]:
+    st.header("Discussão Clínica Simulada")
+    st.write("Digite sua pergunta para obter uma análise clínica baseada nos dados do paciente.")
+
+    pergunta = st.text_input("Pergunta:", placeholder="Exemplo: Quais exames adicionais devo solicitar?")
+    if st.button("Consultar Especialista"):
+        # Simulação de resposta da IA
+        st.success("Baseado nos dados, sugere-se hemograma completo e perfil renal.")
+        st.info("Integração com IA em desenvolvimento...")
