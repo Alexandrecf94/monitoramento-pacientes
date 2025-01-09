@@ -5,9 +5,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import json
+from datetime import datetime
 
 # Configuração do Google Sheets
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
+          "https://www.googleapis.com/auth/drive"]
 
 # Carregar credenciais do Secrets
 credentials_json = os.getenv("GOOGLE_CREDENTIALS")
@@ -16,45 +18,35 @@ creds = Credentials.from_service_account_info(json.loads(credentials_json), scop
 # Autorizar cliente do Google Sheets
 client = gspread.authorize(creds)
 
-# ID da sua planilha no Google Sheets
-spreadsheet_id = "12m2kUbhJnjjUPqyoJiu0YOxvw7x5jtfdtZuMbfEQLfo"  # Substitua pelo ID correto
+# ID da planilha
+spreadsheet_id = "12m2kUbhJnjjUPqyoJiu0YOxvw7x5jtfdtZuMbfEQLfo"
 
-# Nome da aba que você quer acessar
+# Nome da aba na planilha
 sheet_name = "Laboratório"
 
-# Função para carregar os dados da aba
-@st.cache_data(ttl=600)  # Cache com validade de 10 minutos
+# Função para carregar os dados da planilha
 def get_data(sheet_name):
     sheet = client.open_by_key(spreadsheet_id).worksheet(sheet_name)
     all_values = sheet.get_all_values()
 
-    # Ignorar a primeira linha (sem dados úteis) e usar a segunda linha como cabeçalho
-    headers = all_values[1]  # A segunda linha contém os títulos
-    data = all_values[2:]    # Dados começam na terceira linha
+    # Ignorar a primeira linha e usar a segunda como cabeçalho
+    headers = all_values[1]
+    data = all_values[2:]
 
     # Criar DataFrame
     df = pd.DataFrame(data, columns=headers)
 
-    # Remover a coluna "Status" se existir
-    if "Status" in df.columns:
-        df.drop(columns=["Status"], inplace=True)
-
-    # Converter colunas numéricas para tipo correto
+    # Converter colunas numéricas
     for col in ["Hemoglobina", "Hematócrito", "Leucócitos", "Plaquetas", "Glicemia", "Ureia"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # Converter a coluna de datas
     df["DATA"] = pd.to_datetime(df["DATA"], format="%d-%b-%Y", errors="coerce")
-
     return df
 
 # Função para gerar gráficos
-@st.cache_data(ttl=600)  # Cache para salvar gráficos gerados
-def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos):
-    # Filtrar os dados pelo intervalo de tempo
-    df_filtrado = df[(df["DATA"] >= pd.to_datetime(data_inicial)) & (df["DATA"] <= pd.to_datetime(data_final))]
+def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_temporais):
+    df_filtrado = df[(df["DATA"] >= data_inicial) & (df["DATA"] <= data_final)]
 
-    # Criar o gráfico
     plt.figure(figsize=(10, 6))
     plt.plot(df_filtrado["DATA"], df_filtrado[exame_selecionado], marker="o", label=f"{exame_selecionado} (valor)")
     plt.xlabel("Data")
@@ -63,62 +55,66 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos):
     plt.xticks(rotation=45)
 
     # Adicionar marcos temporais
-    for linha in marcos:
-        plt.axvline(pd.to_datetime(linha["data"]), linestyle="--", color="red", alpha=0.7, label=linha["evento"])
+    for linha in marcos_temporais.split("\n"):
+        try:
+            data, evento = linha.split(":")
+            data = pd.to_datetime(data.strip())
+            plt.axvline(data, linestyle="--", color="red", alpha=0.7, label=evento.strip())
+        except ValueError:
+            pass
 
     plt.legend()
     plt.grid()
     return plt
 
+# Função para salvar gráficos em cache
+graph_cache = []  # Lista para armazenar gráficos
+
+def save_graph_to_cache(graph):
+    if len(graph_cache) >= 10:
+        graph_cache.pop(0)  # Remover o gráfico mais antigo se atingir o limite
+    graph_cache.append(graph)
+
 # Configuração do Streamlit
 st.title("Monitoramento de Pacientes")
 
-# Tabs para alternar entre as funcionalidades
-tab1, tab2 = st.tabs(["Visualizar Dados", "Gráficos Gerados"])
+# Aba de navegação
+tabs = st.tabs(["Visualizar Dados", "Gráficos Gerados"])
 
-# Aba "Visualizar Dados"
-with tab1:
+# Aba: Visualizar Dados
+with tabs[0]:
     try:
         df = get_data(sheet_name)
 
         if not df.empty:
-            # Controle para selecionar exame
             st.sidebar.header("Configuração do Gráfico")
-            exame_selecionado = st.sidebar.selectbox(
-                "Selecione o exame:", 
-                df.columns[1:]  # Exibe todas as colunas (exceto "DATA")
-            )
+            exame_selecionado = st.sidebar.selectbox("Selecione o exame:", ["Hemoglobina", "Hematócrito", "Leucócitos", "Plaquetas", "Glicemia", "Ureia"])
 
-            # Controle para selecionar intervalo de tempo
-            data_inicial = st.sidebar.date_input("Data inicial:", value=df["DATA"].min(), min_value=df["DATA"].min(), max_value=df["DATA"].max())
-            data_final = st.sidebar.date_input("Data final:", value=df["DATA"].max(), min_value=df["DATA"].min(), max_value=df["DATA"].max())
+            # Selecionar intervalo de tempo
+            data_inicial = st.sidebar.date_input("Data inicial:", min_value=df["DATA"].min(), max_value=df["DATA"].max(), value=df["DATA"].min())
+            data_final = st.sidebar.date_input("Data final:", min_value=df["DATA"].min(), max_value=df["DATA"].max(), value=df["DATA"].max())
 
-            # Controle para marcos temporais
-            st.sidebar.subheader("Marcos Temporais")
-            marcos_temporais = []
-            with st.sidebar.expander("Adicionar Marcos Temporais"):
-                nova_data = st.date_input("Data do Marco:")
-                novo_evento = st.text_input("Descrição do Evento:")
-                if st.button("Adicionar"):
-                    if nova_data and novo_evento:
-                        marcos_temporais.append({"data": nova_data, "evento": novo_evento})
+            # Adicionar marcos temporais
+            marcos_temporais = st.sidebar.text_area("Marcos Temporais (ex.: 2024-01-01:Evento)")
 
-            # Gerar gráfico e exibir
-            plt = generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_temporais)
-            st.pyplot(plt)
+            # Gerar gráfico
+            graph = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais)
+            st.pyplot(graph)
+
+            # Botão para salvar gráfico
+            if st.button("Salvar Gráfico"):
+                save_graph_to_cache(graph)
+                st.success("Gráfico salvo com sucesso!")
         else:
             st.error("Nenhum dado válido foi carregado. Verifique a planilha.")
     except Exception as e:
         st.error(f"Erro ao carregar os dados: {e}")
 
-# Aba "Gráficos Gerados"
-with tab2:
-    st.subheader("Gráficos Recentemente Gerados")
-    try:
-        st.pyplot(plt)  # Exibe o último gráfico gerado
-    except NameError:
-        st.write("Nenhum gráfico gerado ainda.")
-
-
-
-
+# Aba: Gráficos Gerados
+with tabs[1]:
+    st.header("Gráficos Gerados")
+    if graph_cache:
+        for i, cached_graph in enumerate(graph_cache):
+            st.pyplot(cached_graph)
+    else:
+        st.write("Nenhum gráfico salvo ainda.")
