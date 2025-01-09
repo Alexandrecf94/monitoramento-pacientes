@@ -23,9 +23,6 @@ def autenticar():
 # Garantir que a função de autenticação seja chamada antes de tudo
 autenticar()
 
-# Após autenticação, o restante do aplicativo é carregado normalmente
-st.title("Monitoramento de Pacientes")
-st.write("Bem-vindo ao sistema!")
 
 
 import streamlit as st
