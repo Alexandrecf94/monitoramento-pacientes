@@ -84,114 +84,120 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
 # Configuração do Streamlit
 st.title("Monitoramento de Pacientes")
 
-# Aba de navegação
-tabs = st.tabs(["Laboratório", "Clínica", "Conduta", "Relatórios Automáticos", "Ajustar Gráficos com IA", "Discussão Clínica Simulada"])
+# Menu lateral para escolher seção
+secoes = ["Laboratório", "Clínica", "Conduta", "Discussão Clínica Simulada"]
+secao_selecionada = st.sidebar.selectbox("Selecione a Seção:", secoes)
 
-# Aba: Laboratório
-with tabs[0]:
-    try:
-        df = get_data("Laboratório")
+# Seção: Laboratório
+if secao_selecionada == "Laboratório":
+    st.header("Seção: Laboratório")
+    tabs = st.tabs(["Gráficos", "Relatórios Automáticos", "Ajustar Gráficos com IA"])
 
-        if not df.empty:
-            st.sidebar.header("Configuração do Gráfico")
-            exames_disponiveis = [col for col in df.columns if col != "DATA"]
-            exame_selecionado = st.sidebar.selectbox("Selecione o exame:", exames_disponiveis)
+    # Aba: Gráficos
+    with tabs[0]:
+        try:
+            df = get_data("Laboratório")
 
-            # Selecionar intervalo de tempo
-            data_inicial = st.sidebar.date_input("Data inicial:", min_value=df["DATA"].min(), max_value=df["DATA"].max(), value=df["DATA"].min())
-            data_final = st.sidebar.date_input("Data final:", min_value=df["DATA"].min(), max_value=df["DATA"].max(), value=df["DATA"].max())
+            if not df.empty:
+                st.sidebar.header("Configuração do Gráfico")
+                exames_disponiveis = [col for col in df.columns if col != "DATA"]
+                exame_selecionado = st.sidebar.selectbox("Selecione o exame:", exames_disponiveis)
 
-            # Adicionar marcos temporais
-            st.sidebar.subheader("Marcos Temporais")
-            if "marcos" not in st.session_state:
-                st.session_state["marcos"] = []
+                # Selecionar intervalo de tempo
+                data_inicial = st.sidebar.date_input("Data inicial:", min_value=df["DATA"].min(), max_value=df["DATA"].max(), value=df["DATA"].min())
+                data_final = st.sidebar.date_input("Data final:", min_value=df["DATA"].min(), max_value=df["DATA"].max(), value=df["DATA"].max())
 
-            with st.sidebar.expander("Adicionar ou Remover Marcos Temporais"):
-                nova_data = st.date_input("Data do Marco:", key="nova_data")
-                novo_evento = st.text_input("Descrição do Evento:", key="novo_evento")
-                if st.button("Adicionar Marco"):
-                    if nova_data and novo_evento:
-                        st.session_state["marcos"].append((pd.to_datetime(nova_data), novo_evento))
-                if st.session_state["marcos"]:
-                    st.write("Marcos Adicionados:")
-                    for i, (data, evento) in enumerate(st.session_state["marcos"]):
-                        st.write(f"{i + 1}: {data.date()} - {evento}")
-                        if st.button(f"Remover {evento}", key=f"remove_{i}"):
-                            st.session_state["marcos"].pop(i)
+                # Adicionar marcos temporais
+                st.sidebar.subheader("Marcos Temporais")
+                if "marcos" not in st.session_state:
+                    st.session_state["marcos"] = []
 
-            marcos_temporais = st.session_state["marcos"]
+                with st.sidebar.expander("Adicionar ou Remover Marcos Temporais"):
+                    nova_data = st.date_input("Data do Marco:", key="nova_data")
+                    novo_evento = st.text_input("Descrição do Evento:", key="novo_evento")
+                    if st.button("Adicionar Marco"):
+                        if nova_data and novo_evento:
+                            st.session_state["marcos"].append((pd.to_datetime(nova_data), novo_evento))
+                    if st.session_state["marcos"]:
+                        st.write("Marcos Adicionados:")
+                        for i, (data, evento) in enumerate(st.session_state["marcos"]):
+                            st.write(f"{i + 1}: {data.date()} - {evento}")
+                            if st.button(f"Remover {evento}", key=f"remove_{i}"):
+                                st.session_state["marcos"].pop(i)
 
-            # Adicionar faixas de datas
-            st.sidebar.subheader("Faixas de Datas")
-            if "faixas" not in st.session_state:
-                st.session_state["faixas"] = []
+                marcos_temporais = st.session_state["marcos"]
 
-            with st.sidebar.expander("Adicionar ou Remover Faixas de Datas"):
-                faixa_inicio = st.date_input("Início da Faixa:", key="faixa_inicio")
-                faixa_fim = st.date_input("Fim da Faixa:", key="faixa_fim")
-                descricao_faixa = st.text_input("Descrição da Faixa:", key="descricao_faixa")
-                if st.button("Adicionar Faixa"):
-                    if faixa_inicio and faixa_fim and descricao_faixa:
-                        st.session_state["faixas"].append((pd.to_datetime(faixa_inicio), pd.to_datetime(faixa_fim), descricao_faixa))
-                if st.session_state["faixas"]:
-                    st.write("Faixas Adicionadas:")
-                    for i, (inicio, fim, descricao) in enumerate(st.session_state["faixas"]):
-                        st.write(f"{i + 1}: {inicio.date()} - {fim.date()} ({descricao})")
-                        if st.button(f"Remover Faixa: {descricao}", key=f"remove_faixa_{i}"):
-                            st.session_state["faixas"].pop(i)
+                # Adicionar faixas de datas
+                st.sidebar.subheader("Faixas de Datas")
+                if "faixas" not in st.session_state:
+                    st.session_state["faixas"] = []
 
-            faixas_temporais = st.session_state["faixas"]
+                with st.sidebar.expander("Adicionar ou Remover Faixas de Datas"):
+                    faixa_inicio = st.date_input("Início da Faixa:", key="faixa_inicio")
+                    faixa_fim = st.date_input("Fim da Faixa:", key="faixa_fim")
+                    descricao_faixa = st.text_input("Descrição da Faixa:", key="descricao_faixa")
+                    if st.button("Adicionar Faixa"):
+                        if faixa_inicio and faixa_fim and descricao_faixa:
+                            st.session_state["faixas"].append((pd.to_datetime(faixa_inicio), pd.to_datetime(faixa_fim), descricao_faixa))
+                    if st.session_state["faixas"]:
+                        st.write("Faixas Adicionadas:")
+                        for i, (inicio, fim, descricao) in enumerate(st.session_state["faixas"]):
+                            st.write(f"{i + 1}: {inicio.date()} - {fim.date()} ({descricao})")
+                            if st.button(f"Remover Faixa: {descricao}", key=f"remove_faixa_{i}"):
+                                st.session_state["faixas"].pop(i)
 
-            # Exibir valores nos pontos
-            exibir_valores = st.sidebar.checkbox("Exibir valores nos pontos", value=False)
+                faixas_temporais = st.session_state["faixas"]
 
-            # Gerar gráfico
-            graph_buf = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais, faixas_temporais, exibir_valores)
-            st.image(graph_buf, caption=f"{exame_selecionado} ao longo do tempo")
+                # Exibir valores nos pontos
+                exibir_valores = st.sidebar.checkbox("Exibir valores nos pontos", value=False)
 
-            # Botão para baixar gráfico
-            st.download_button("Baixar Gráfico", data=graph_buf, file_name=f"{exame_selecionado}_grafico.png", mime="image/png")
-        else:
-            st.error("Nenhum dado válido foi carregado. Verifique a planilha.")
-    except Exception as e:
-        st.error(f"Erro ao carregar os dados: {e}")
+                # Gerar gráfico
+                graph_buf = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais, faixas_temporais, exibir_valores)
+                st.image(graph_buf, caption=f"{exame_selecionado} ao longo do tempo")
 
-# Aba: Clínica
-with tabs[1]:
+                # Botão para baixar gráfico
+                st.download_button("Baixar Gráfico", data=graph_buf, file_name=f"{exame_selecionado}_grafico.png", mime="image/png")
+            else:
+                st.error("Nenhum dado válido foi carregado. Verifique a planilha.")
+        except Exception as e:
+            st.error(f"Erro ao carregar os dados: {e}")
+
+    # Aba: Relatórios Automáticos
+    with tabs[1]:
+        st.header("Relatórios Automáticos")
+        st.write("Em desenvolvimento...")
+
+    # Aba: Ajustar Gráficos com IA
+    with tabs[2]:
+        st.header("Ajustar Gráficos com IA")
+        st.write("Digite comandos para ajustar os gráficos automaticamente usando IA.")
+
+        comando = st.text_input("Digite o comando:", placeholder="Exemplo: Adicione uma linha de tendência ao gráfico.")
+        if st.button("Executar Comando"):
+            # Simulação de processamento de comando
+            st.success(f"Comando recebido: {comando}")
+            st.info("Integração com IA em desenvolvimento...")
+
+# Seção: Clínica
+elif secao_selecionada == "Clínica":
+    st.header("Seção: Clínica")
     try:
         df_clinica = get_data("Evolução Clínica")
-        st.header("Evolução Clínica")
         st.write(df_clinica)
     except Exception as e:
         st.error(f"Erro ao carregar os dados da clínica: {e}")
 
-# Aba: Conduta
-with tabs[2]:
+# Seção: Conduta
+elif secao_selecionada == "Conduta":
+    st.header("Seção: Conduta")
     try:
         df_conduta = get_data("Conduta")
-        st.header("Conduta")
         st.write(df_conduta)
     except Exception as e:
         st.error(f"Erro ao carregar os dados da conduta: {e}")
 
-# Aba: Relatórios Automáticos
-with tabs[3]:
-    st.header("Relatórios Automáticos")
-    st.write("Em desenvolvimento...")
-
-# Aba: Ajustar Gráficos com IA
-with tabs[4]:
-    st.header("Ajustar Gráficos com IA")
-    st.write("Digite comandos para ajustar os gráficos automaticamente usando IA.")
-
-    comando = st.text_input("Digite o comando:", placeholder="Exemplo: Adicione uma linha de tendência ao gráfico.")
-    if st.button("Executar Comando"):
-        # Simulação de processamento de comando
-        st.success(f"Comando recebido: {comando}")
-        st.info("Integração com IA em desenvolvimento...")
-
-# Aba: Discussão Clínica Simulada
-with tabs[5]:
+# Seção: Discussão Clínica Simulada
+elif secao_selecionada == "Discussão Clínica Simulada":
     st.header("Discussão Clínica Simulada")
     st.write("Digite sua pergunta para obter uma análise clínica baseada nos dados do paciente.")
 
