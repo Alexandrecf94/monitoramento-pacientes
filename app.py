@@ -67,12 +67,14 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
     return plt
 
 # Função para salvar gráficos em cache
-graph_cache = []  # Lista para armazenar gráficos
+def save_graph_to_cache(graph, exame_selecionado):
+    if "graph_cache" not in st.session_state:
+        st.session_state["graph_cache"] = []
 
-def save_graph_to_cache(graph):
-    if len(graph_cache) >= 10:
-        graph_cache.pop(0)  # Remover o gráfico mais antigo se atingir o limite
-    graph_cache.append(graph)
+    if len(st.session_state["graph_cache"]) >= 10:
+        st.session_state["graph_cache"].pop(0)  # Remover o gráfico mais antigo se atingir o limite
+
+    st.session_state["graph_cache"].append((graph, exame_selecionado))
 
 # Configuração do Streamlit
 st.title("Monitoramento de Pacientes")
@@ -96,16 +98,21 @@ with tabs[0]:
 
             # Adicionar marcos temporais
             st.sidebar.subheader("Marcos Temporais")
-            marcos_temporais = []
             if "marcos" not in st.session_state:
                 st.session_state["marcos"] = []
 
-            with st.sidebar.expander("Adicionar Marcos Temporais"):
+            with st.sidebar.expander("Adicionar ou Remover Marcos Temporais"):
                 nova_data = st.date_input("Data do Marco:", key="nova_data")
                 novo_evento = st.text_input("Descrição do Evento:", key="novo_evento")
                 if st.button("Adicionar Marco"):
                     if nova_data and novo_evento:
                         st.session_state["marcos"].append((pd.to_datetime(nova_data), novo_evento))
+                if st.session_state["marcos"]:
+                    st.write("Marcos Adicionados:")
+                    for i, (data, evento) in enumerate(st.session_state["marcos"]):
+                        st.write(f"{i + 1}: {data.date()} - {evento}")
+                        if st.button(f"Remover {evento}", key=f"remove_{i}"):
+                            st.session_state["marcos"].pop(i)
 
             marcos_temporais = st.session_state["marcos"]
 
@@ -115,7 +122,7 @@ with tabs[0]:
 
             # Botão para salvar gráfico
             if st.button("Salvar Gráfico"):
-                save_graph_to_cache(graph)
+                save_graph_to_cache(graph, exame_selecionado)
                 st.success("Gráfico salvo com sucesso!")
         else:
             st.error("Nenhum dado válido foi carregado. Verifique a planilha.")
@@ -125,9 +132,9 @@ with tabs[0]:
 # Aba: Gráficos Gerados
 with tabs[1]:
     st.header("Gráficos Gerados")
-    if graph_cache:
-        for i, cached_graph in enumerate(graph_cache):
+    if "graph_cache" in st.session_state and st.session_state["graph_cache"]:
+        for i, (cached_graph, exame) in enumerate(st.session_state["graph_cache"]):
             st.pyplot(cached_graph)
-            st.markdown(f"Gráfico {i+1}")
+            st.markdown(f"Gráfico {i + 1}: {exame}")
     else:
         st.write("Nenhum gráfico salvo ainda.")
