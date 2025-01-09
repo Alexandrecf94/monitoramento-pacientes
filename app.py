@@ -1,3 +1,18 @@
+import streamlit as st
+from google.oauth2.service_account import Credentials
+import gspread
+import pandas as pd
+import matplotlib.pyplot as plt
+from PIL import Image
+import os
+import json
+from io import BytesIO
+from datetime import datetime
+
+# Configuração do Google Sheets
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
+          "https://www.googleapis.com/auth/drive"]
+
 # Função para autenticação básica
 def autenticar():
     # Credenciais fixas (login e senha para teste)
@@ -19,25 +34,10 @@ def autenticar():
                 st.experimental_rerun()  # Reinicia a execução após autenticar
             else:
                 st.error("Usuário ou senha incorretos.")
-        st.stop()  # Interrompe até que o usuário esteja autenticado
+        st.stop()  # Para a execução até autenticar
+
 # Chamar a função de autenticação
 autenticar()
-
-
-import streamlit as st
-from google.oauth2.service_account import Credentials
-import gspread
-import pandas as pd
-import matplotlib.pyplot as plt
-from PIL import Image
-import os
-import json
-from io import BytesIO
-from datetime import datetime
-
-# Configuração do Google Sheets
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets",
-          "https://www.googleapis.com/auth/drive"]
 
 # Carregar credenciais do Secrets
 credentials_json = os.getenv("GOOGLE_CREDENTIALS")
