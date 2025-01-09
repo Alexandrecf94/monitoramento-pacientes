@@ -1,3 +1,4 @@
+import streamlit as st
 # Função para autenticação básica
 def autenticar():
     # Credenciais fixas (login e senha para teste)
