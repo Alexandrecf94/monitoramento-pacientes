@@ -48,9 +48,9 @@ def get_data(sheet_name):
 
     df["DATA"] = pd.to_datetime(df["DATA"], format="%d-%b-%Y", errors="coerce")
     return df
-          
+
 # Função para gerar gráficos
-def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_temporais, faixas_temporais):
+def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_temporais, faixas_temporais, exibir_valores):
     df_filtrado = df[(df["DATA"] >= data_inicial) & (df["DATA"] <= data_final)]
 
     plt.figure(figsize=(12, 8))  # Tamanho maior para exibição completa
@@ -60,6 +60,11 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
     plt.title(f"{exame_selecionado} ao longo do tempo", fontsize=16)
     plt.xticks(rotation=45, ha="right")
     plt.grid(alpha=0.5)
+
+    # Adicionar valores sobre os pontos
+    if exibir_valores:
+        for x, y in zip(df_filtrado["DATA"], df_filtrado[exame_selecionado]):
+            plt.text(x, y, f"{y:.2f}", fontsize=9, ha="center", va="bottom", color="blue")
 
     # Adicionar marcos temporais
     for data, evento in marcos_temporais:
@@ -78,7 +83,6 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
     buf.seek(0)
     plt.close()
     return buf
-
 
 # Configuração do Streamlit
 st.title("Monitoramento de Pacientes")
@@ -141,8 +145,11 @@ with tabs[0]:
 
             faixas_temporais = st.session_state["faixas"]
 
+            # Exibir valores nos pontos
+            exibir_valores = st.sidebar.checkbox("Exibir valores nos pontos", value=False)
+
             # Gerar gráfico
-            graph_buf = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais, faixas_temporais)
+            graph_buf = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais, faixas_temporais, exibir_valores)
             st.image(graph_buf, caption=f"{exame_selecionado} ao longo do tempo")
 
             # Botão para baixar gráfico
