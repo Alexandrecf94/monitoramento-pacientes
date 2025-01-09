@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import json
+from io import BytesIO
 from datetime import datetime
 
 # Configuração do Google Sheets
@@ -68,17 +69,12 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
 
     plt.legend()
     plt.grid()
-    return plt
 
-# Função para salvar gráficos em cache
-def save_graph_to_cache(graph, exame_selecionado):
-    if "graph_cache" not in st.session_state:
-        st.session_state["graph_cache"] = []
-
-    if len(st.session_state["graph_cache"]) >= 10:
-        st.session_state["graph_cache"].pop(0)  # Remover o gráfico mais antigo se atingir o limite
-
-    st.session_state["graph_cache"].append((graph, exame_selecionado))
+    # Salvar gráfico em memória
+    buf = BytesIO()
+    plt.savefig(buf, format="png")
+    buf.seek(0)
+    return buf
 
 # Configuração do Streamlit
 st.title("Monitoramento de Pacientes")
@@ -143,11 +139,13 @@ with tabs[0]:
 
             # Gerar gráfico
             graph = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais, faixas_temporais)
-            st.pyplot(graph)
+            st.image(graph, caption=f"{exame_selecionado} ao longo do tempo")
 
             # Botão para salvar gráfico
             if st.button("Salvar Gráfico"):
-                save_graph_to_cache(graph, exame_selecionado)
+                if "graph_cache" not in st.session_state:
+                    st.session_state["graph_cache"] = []
+                st.session_state["graph_cache"].append((graph, exame_selecionado))
                 st.success("Gráfico salvo com sucesso!")
         else:
             st.error("Nenhum dado válido foi carregado. Verifique a planilha.")
@@ -159,7 +157,6 @@ with tabs[1]:
     st.header("Gráficos Gerados")
     if "graph_cache" in st.session_state and st.session_state["graph_cache"]:
         for i, (cached_graph, exame) in enumerate(st.session_state["graph_cache"]):
-            st.pyplot(cached_graph)
-            st.markdown(f"Gráfico {i + 1}: {exame}")
+            st.image(cached_graph, caption=f"Gráfico {i + 1}: {exame}")
     else:
         st.write("Nenhum gráfico salvo ainda.")
