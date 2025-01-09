@@ -59,8 +59,7 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
     plt.xticks(rotation=45)
 
     # Adicionar marcos temporais
-    for linha in marcos_temporais:
-        data, evento = linha
+    for data, evento in marcos_temporais:
         plt.axvline(data, linestyle="--", color="red", alpha=0.7, label=evento)
 
     plt.legend()
@@ -98,12 +97,17 @@ with tabs[0]:
             # Adicionar marcos temporais
             st.sidebar.subheader("Marcos Temporais")
             marcos_temporais = []
+            if "marcos" not in st.session_state:
+                st.session_state["marcos"] = []
+
             with st.sidebar.expander("Adicionar Marcos Temporais"):
-                nova_data = st.date_input("Data do Marco:")
-                novo_evento = st.text_input("Descrição do Evento:")
+                nova_data = st.date_input("Data do Marco:", key="nova_data")
+                novo_evento = st.text_input("Descrição do Evento:", key="novo_evento")
                 if st.button("Adicionar Marco"):
                     if nova_data and novo_evento:
-                        marcos_temporais.append((pd.to_datetime(nova_data), novo_evento))
+                        st.session_state["marcos"].append((pd.to_datetime(nova_data), novo_evento))
+
+            marcos_temporais = st.session_state["marcos"]
 
             # Gerar gráfico
             graph = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais)
