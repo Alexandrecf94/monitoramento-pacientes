@@ -48,17 +48,18 @@ def get_data(sheet_name):
 
     df["DATA"] = pd.to_datetime(df["DATA"], format="%d-%b-%Y", errors="coerce")
     return df
-
+          
 # Função para gerar gráficos
 def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_temporais, faixas_temporais):
     df_filtrado = df[(df["DATA"] >= data_inicial) & (df["DATA"] <= data_final)]
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(12, 8))  # Tamanho maior para exibição completa
     plt.plot(df_filtrado["DATA"], df_filtrado[exame_selecionado], marker="o", label=f"{exame_selecionado} (valor)")
     plt.xlabel("Data")
     plt.ylabel(exame_selecionado)
-    plt.title(f"{exame_selecionado} ao longo do tempo")
-    plt.xticks(rotation=45)
+    plt.title(f"{exame_selecionado} ao longo do tempo", fontsize=16)
+    plt.xticks(rotation=45, ha="right")
+    plt.grid(alpha=0.5)
 
     # Adicionar marcos temporais
     for data, evento in marcos_temporais:
@@ -69,14 +70,15 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
         plt.axvspan(inicio, fim, color="yellow", alpha=0.3, label=descricao)
 
     plt.legend()
-    plt.grid()
+    plt.tight_layout()  # Ajuste automático das margens
 
     # Salvar gráfico em memória como imagem
     buf = BytesIO()
-    plt.savefig(buf, format="png")
+    plt.savefig(buf, format="png")  # Removido bbox_inches para evitar corte
     buf.seek(0)
     plt.close()
     return buf
+
 
 # Configuração do Streamlit
 st.title("Monitoramento de Pacientes")
