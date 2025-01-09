@@ -48,7 +48,7 @@ def get_data(sheet_name):
     return df
 
 # Função para gerar gráficos
-def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_temporais):
+def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_temporais, faixas_temporais):
     df_filtrado = df[(df["DATA"] >= data_inicial) & (df["DATA"] <= data_final)]
 
     plt.figure(figsize=(10, 6))
@@ -61,6 +61,10 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
     # Adicionar marcos temporais
     for data, evento in marcos_temporais:
         plt.axvline(data, linestyle="--", color="red", alpha=0.7, label=evento)
+
+    # Adicionar faixas temporais
+    for inicio, fim, descricao in faixas_temporais:
+        plt.axvspan(inicio, fim, color="yellow", alpha=0.3, label=descricao)
 
     plt.legend()
     plt.grid()
@@ -116,8 +120,29 @@ with tabs[0]:
 
             marcos_temporais = st.session_state["marcos"]
 
+            # Adicionar faixas de datas
+            st.sidebar.subheader("Faixas de Datas")
+            if "faixas" not in st.session_state:
+                st.session_state["faixas"] = []
+
+            with st.sidebar.expander("Adicionar ou Remover Faixas de Datas"):
+                faixa_inicio = st.date_input("Início da Faixa:", key="faixa_inicio")
+                faixa_fim = st.date_input("Fim da Faixa:", key="faixa_fim")
+                descricao_faixa = st.text_input("Descrição da Faixa:", key="descricao_faixa")
+                if st.button("Adicionar Faixa"):
+                    if faixa_inicio and faixa_fim and descricao_faixa:
+                        st.session_state["faixas"].append((pd.to_datetime(faixa_inicio), pd.to_datetime(faixa_fim), descricao_faixa))
+                if st.session_state["faixas"]:
+                    st.write("Faixas Adicionadas:")
+                    for i, (inicio, fim, descricao) in enumerate(st.session_state["faixas"]):
+                        st.write(f"{i + 1}: {inicio.date()} - {fim.date()} ({descricao})")
+                        if st.button(f"Remover Faixa: {descricao}", key=f"remove_faixa_{i}"):
+                            st.session_state["faixas"].pop(i)
+
+            faixas_temporais = st.session_state["faixas"]
+
             # Gerar gráfico
-            graph = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais)
+            graph = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais, faixas_temporais)
             st.pyplot(graph)
 
             # Botão para salvar gráfico
