@@ -6,27 +6,27 @@ def autenticar():
     if "autenticado" not in st.session_state:
         st.session_state["autenticado"] = False  # Usuário começa como não autenticado
 
-    # Verificar se o usuário está autenticado
+    # Tela de login
     if not st.session_state["autenticado"]:
-        st.title("Login")
-        login = st.text_input("Usuário", key="login")
-        senha = st.text_input("Senha", type="password", key="senha")
-        if st.button("Entrar"):
-            # Validar as credenciais fixas
+        with st.form("login_form", clear_on_submit=True):
+            st.title("Login")
+            login = st.text_input("Usuário")
+            senha = st.text_input("Senha", type="password")
+            autenticar_btn = st.form_submit_button("Entrar")
+        
+        # Verificar credenciais
+        if autenticar_btn:
             if login == "admin" and senha == "1234":
                 st.session_state["autenticado"] = True
+                st.experimental_rerun()  # Reiniciar a página para carregar a interface principal
             else:
                 st.error("Usuário ou senha incorretos.")
-        if not st.session_state["autenticado"]:
-            st.stop()  # Para execução do restante do aplicativo se não autenticado
+        st.stop()  # Para a execução se não autenticado
 
 # Garantir que a função de autenticação seja chamada antes de tudo
 autenticar()
 
 
-
-
-import streamlit as st
 from google.oauth2.service_account import Credentials
 import gspread
 import pandas as pd
