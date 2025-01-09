@@ -8,23 +8,27 @@ def autenticar():
 
     # Tela de login
     if not st.session_state["autenticado"]:
-        with st.form("login_form", clear_on_submit=True):
-            st.title("Login")
-            login = st.text_input("Usuário")
-            senha = st.text_input("Senha", type="password")
-            autenticar_btn = st.form_submit_button("Entrar")
-        
-        # Verificar credenciais
-        if autenticar_btn:
+        st.title("Login")
+        login = st.text_input("Usuário")
+        senha = st.text_input("Senha", type="password")
+        if st.button("Entrar"):
             if login == "admin" and senha == "1234":
                 st.session_state["autenticado"] = True
-                st.experimental_rerun()  # Reiniciar a página para carregar a interface principal
+                st.experimental_set_query_params(auth="true")  # Define um parâmetro para autenticação
+                st.success("Login realizado com sucesso! Recarregando...")
+                st.experimental_rerun()  # Reinicia a aplicação para carregar a interface principal
             else:
                 st.error("Usuário ou senha incorretos.")
         st.stop()  # Para a execução se não autenticado
 
 # Garantir que a função de autenticação seja chamada antes de tudo
-autenticar()
+if not st.session_state.get("autenticado"):
+    autenticar()
+
+# Código principal do aplicativo
+st.title("Bem-vindo ao Monitoramento de Pacientes")
+st.write("Você está autenticado!")
+
 
 
 from google.oauth2.service_account import Credentials
