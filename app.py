@@ -76,13 +76,13 @@ def generate_graph(df, exame_selecionado, data_inicial, data_final, marcos_tempo
     plt.savefig(buf, format="png")
     buf.seek(0)
     plt.close()
-    return Image.open(buf)
+    return buf
 
 # Configuração do Streamlit
 st.title("Monitoramento de Pacientes")
 
 # Aba de navegação
-tabs = st.tabs(["Visualizar Dados", "Gráficos Gerados"])
+tabs = st.tabs(["Visualizar Dados", "Relatórios Automáticos"])
 
 # Aba: Visualizar Dados
 with tabs[0]:
@@ -140,25 +140,17 @@ with tabs[0]:
             faixas_temporais = st.session_state["faixas"]
 
             # Gerar gráfico
-            graph = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais, faixas_temporais)
-            st.image(graph, caption=f"{exame_selecionado} ao longo do tempo")
+            graph_buf = generate_graph(df, exame_selecionado, pd.to_datetime(data_inicial), pd.to_datetime(data_final), marcos_temporais, faixas_temporais)
+            st.image(graph_buf, caption=f"{exame_selecionado} ao longo do tempo")
 
-            # Botão para salvar gráfico
-            if st.button("Salvar Gráfico"):
-                if "graph_cache" not in st.session_state:
-                    st.session_state["graph_cache"] = []
-                st.session_state["graph_cache"].append((graph, exame_selecionado))
-                st.success("Gráfico salvo com sucesso!")
+            # Botão para baixar gráfico
+            st.download_button("Baixar Gráfico", data=graph_buf, file_name=f"{exame_selecionado}_grafico.png", mime="image/png")
         else:
             st.error("Nenhum dado válido foi carregado. Verifique a planilha.")
     except Exception as e:
         st.error(f"Erro ao carregar os dados: {e}")
 
-# Aba: Gráficos Gerados
+# Aba: Relatórios Automáticos
 with tabs[1]:
-    st.header("Gráficos Gerados")
-    if "graph_cache" in st.session_state and st.session_state["graph_cache"]:
-        for i, (cached_graph, exame) in enumerate(st.session_state["graph_cache"]):
-            st.image(cached_graph, caption=f"Gráfico {i + 1}: {exame}")
-    else:
-        st.write("Nenhum gráfico salvo ainda.")
+    st.header("Relatórios Automáticos")
+    st.write("Em desenvolvimento...")
